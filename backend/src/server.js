@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const { roll, tableSuffix } = require("./db");
 const apiRoutes = require("./routes/api");
 
 const app = express();
@@ -14,10 +15,10 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "student-portal-api", rollNumber: process.env.ROLL_NUMBER || "1234" });
+  res.json({ ok: true, service: "student-portal-api", rollNumber: roll });
 });
 
-app.use("/api", apiRoutes);
+app.use([`/api/${roll}`, `/api/${tableSuffix}`], apiRoutes);
 
 if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist));

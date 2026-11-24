@@ -2,11 +2,11 @@ const express = require("express");
 const db = require("../db");
 
 const router = express.Router();
-const { roll } = db;
+const { roll, tableSuffix } = db;
 
-const studentsTable = `students_${roll}`;
-const activitiesTable = `activities_${roll}`;
-const subjectsTable = `Subject_${roll}`;
+const studentsTable = `students_${tableSuffix}`;
+const activitiesTable = `activities_${tableSuffix}`;
+const subjectsTable = `Subject_${tableSuffix}`;
 
 router.use((_req, res, next) => {
   res.set("Cache-Control", "no-store");
@@ -37,10 +37,13 @@ function validateActivity(req, res, next) {
   next();
 }
 
-router.get(`/${roll}/student`, async (_req, res, next) => {
+router.get("/student", async (_req, res, next) => {
   try {
     const studentRows = await db.rows(
-      `SELECT id, name, roll_number, course, email, city, school, year_of_passing, tenth_percentage FROM ${studentsTable} LIMIT 1`,
+      `SELECT id, name, roll_number, course, email, city, school, year_of_passing, tenth_percentage,
+              twelfth_percentage, college, cgpa, college_start_year, college_end_year
+       FROM ${studentsTable} WHERE roll_number = ?`,
+      [roll],
     );
 
     if (studentRows.length === 0) {
@@ -61,7 +64,7 @@ router.get(`/${roll}/student`, async (_req, res, next) => {
   }
 });
 
-router.get(`/${roll}/activities`, async (_req, res, next) => {
+router.get("/activities", async (_req, res, next) => {
   try {
     const rows = await db.rows(
       `SELECT id, title, description, status, date FROM ${activitiesTable} ORDER BY date DESC, id DESC`,
@@ -72,7 +75,7 @@ router.get(`/${roll}/activities`, async (_req, res, next) => {
   }
 });
 
-router.post(`/${roll}/activities`, validateActivity, async (req, res, next) => {
+router.post("/activities", validateActivity, async (req, res, next) => {
   try {
     const { title, description, status, date } = req.body;
 
@@ -90,7 +93,7 @@ router.post(`/${roll}/activities`, validateActivity, async (req, res, next) => {
 });
 
 router.put(
-  `/${roll}/activities/:id`,
+  "/activities/:id",
   validateActivity,
   async (req, res, next) => {
     try {
@@ -113,7 +116,7 @@ router.put(
   },
 );
 
-router.delete(`/${roll}/activities/:id`, async (req, res, next) => {
+router.delete("/activities/:id", async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     const result = await db.write(

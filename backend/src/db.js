@@ -6,13 +6,16 @@ const driver =
   (process.env.RENDER === "true" || !process.env.MYSQLHOST
     ? "sqlite"
     : "mysql");
-const roll = process.env.ROLL_NUMBER || "1234";
-if (!/^\d+$/.test(roll))
-  throw new Error("ROLL_NUMBER must contain only digits.");
+const configuredRoll = process.env.ROLL_NUMBER || "1234";
+if (!/^[A-Za-z0-9]+$/.test(configuredRoll))
+  throw new Error("ROLL_NUMBER must contain only letters and digits.");
+const roll = configuredRoll === "1234" ? "24UADS1047" : configuredRoll;
+// The original tables also hold existing activities and subject records.
+const tableSuffix = roll === "24UADS1047" ? "1234" : roll;
 
 function openSqlite() {
-  if (roll !== "1234")
-    throw new Error("The SQLite sample database uses roll number 1234.");
+  if (roll !== "24UADS1047")
+    throw new Error("The SQLite sample database uses roll number 24UADS1047.");
   const { DatabaseSync } = require("node:sqlite");
   const location =
     process.env.SQLITE_PATH || path.resolve(__dirname, "../data/portal.sqlite");
@@ -26,6 +29,10 @@ function openSqlite() {
       db.exec(fs.readFileSync(path.join(__dirname, "seed.sqlite.sql"), "utf8"));
       db.exec("PRAGMA user_version=1");
     }
+    if (db.prepare("PRAGMA user_version").get().user_version === 1) {
+      db.exec(fs.readFileSync(path.join(__dirname, "profile-v2.sql"), "utf8"));
+      db.exec("PRAGMA user_version=2");
+    }
     db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");
@@ -33,6 +40,7 @@ function openSqlite() {
   }
   return {
     roll,
+    tableSuffix,
     storageNotice:
       process.env.RENDER === "true" && !process.env.SQLITE_PATH
         ? "This shared demo uses temporary storage. Export your activities to keep a copy before the host restarts."
@@ -70,7 +78,7 @@ function openMysql() {
     const [result] = await pool.execute(sql, params);
     return result;
   }
-  return { roll, rows: query, write: query, storageNotice: null };
+  return { roll, tableSuffix, rows: query, write: query, storageNotice: null };
 }
 
 if (!["mysql", "sqlite"].includes(driver))

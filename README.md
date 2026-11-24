@@ -1,6 +1,6 @@
 # Student Information Portal
 
-React, Express and SQL power a shared student demo for roll 1234. Open [the portal](https://student-info-project.vercel.app/) and choose **Open demo workspace**, or enter roll `1234` and password `Secure@1234`. The demo gate is for navigation. The shared API is public.
+React, Express and SQL power a shared student demo for roll 24UADS1047. Open [the portal](https://student-info-project.vercel.app/) and choose **Open demo workspace**, or enter roll `24UADS1047` and password `Secure@1234`. The demo gate is for navigation. The shared API is public.
 
 ## Run locally
 
@@ -14,6 +14,6 @@ On Render the default database is SQLite. With the default ephemeral filesystem,
 
 ## MySQL
 
-Set `PORTAL_DB=mysql` to use a durable MySQL database. Copy `backend/.env.example` to `backend/.env` locally, or set its MySQL values in the host environment. For Aiven, supply the project CA in `MYSQL_SSL_CA`. Point `MYSQLDATABASE` at your existing populated database or import `sql/schema_1234.sql` once into a new database. Switching drivers selects a different database. Records are not synchronized between SQLite and MySQL.
+Set `PORTAL_DB=mysql` to use a durable MySQL database. Copy `backend/.env.example` to `backend/.env` locally, or set its MySQL values in the host environment. For Aiven, supply the project CA in `MYSQL_SSL_CA`. Point `MYSQLDATABASE` at your existing populated database or import `sql/schema_1234.sql` once into a new database. For a populated MySQL database created with the previous schema, run `backend/src/profile-v2.sql` once against that database before deploying this version. Fresh MySQL schemas already contain the updated profile and thirteen subjects. Switching drivers selects a different database. Records are not synchronized between SQLite and MySQL.
 
-The service checks for SQLite schema initialization within a transaction. A temporary MySQL outage returns an error until connectivity recovers. Check `/api/1234/student` and `/api/1234/activities` for live data, and `/health` for process availability.
+The service checks for SQLite schema initialization within a transaction. A temporary MySQL outage returns an error until connectivity recovers. Check `/api/24UADS1047/student` and `/api/24UADS1047/activities` for live data, and `/health` for process availability.

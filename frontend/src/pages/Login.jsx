@@ -23,7 +23,7 @@ export default function Login({ onEnter, rollNumber }) {
       </header>
       <div className="login-spread">
         <section className="cover">
-          <p className="eyebrow">B.Tech · Computer Science</p>
+          <p className="eyebrow">Artificial Intelligence and Data Science (AIDS)</p>
           <h1>
             Student
             <br />

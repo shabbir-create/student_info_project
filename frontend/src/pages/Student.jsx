@@ -21,6 +21,10 @@ export default function Student({ portalData: { studentResource } }) {
             <h2>Academic profile</h2>
             <dl className="facts">
               {[
+                ["College", s.college],
+                ["College tenure", `${s.college_start_year}–${s.college_end_year}`],
+                ["CGPA", Number(s.cgpa).toFixed(2)],
+                ["12th percentage", Number(s.twelfth_percentage) + "%"],
                 ["School", s.school],
                 ["City", s.city],
                 ["Year of passing", s.year_of_passing],
