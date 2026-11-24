@@ -1,79 +1,47 @@
-import { useEffect, useState } from "react";
-const BASE_URL = "https://student-info-project.onrender.com";
+import { useState } from "react";
+import LoadStatus from "../LoadStatus";
+import { requestPortal } from "../api";
+import { usePortalData } from "../usePortalData";
+
+const emptyForm = { title: "", description: "", status: "Planned", date: "" };
+
 function Home({ portalData }) {
-  const { rollNumber, student, setStudent, activities, setActivities, error, setError } = portalData;
-  const [form, setForm] = useState({ title: "", description: "", status: "Planned", date: "" });
+  const { rollNumber, studentResource } = portalData;
+  const student = studentResource.data;
+  const path = `${rollNumber}/activities`;
+  const activities = usePortalData(path);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const loadData = async () => {
+  async function changeActivity(method, id, body) {
+    setSaving(true);
+    setError("");
     try {
-      setError("");
-      const [studentRes, activitiesRes] = await Promise.all([
-        fetch(`${BASE_URL}/api/${rollNumber}/student`),
-        fetch(`${BASE_URL}/api/${rollNumber}/activities`)
-      ]);
-      if (!studentRes.ok || !activitiesRes.ok) {
-        throw new Error("API request failed.");
-      }
-      setStudent(await studentRes.json());
-      setActivities(await activitiesRes.json());
-    } catch (e) {
-      setError(e.message);
+      await requestPortal(id == null ? path : `${path}/${id}`, {
+        method,
+        headers: body && { "Content-Type": "application/json" },
+        body: body && JSON.stringify(body)
+      });
+      if (method === "POST") setForm(emptyForm);
+      activities.reload();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setSaving(false);
     }
-  };
+  }
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const addActivity = async (event) => {
+  function addActivity(event) {
     event.preventDefault();
-    try {
-      const response = await fetch(`${BASE_URL}/api/${rollNumber}/activities`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
-      });
-      if (!response.ok) throw new Error("Unable to add activity.");
-      setForm({ title: "", description: "", status: "Planned", date: "" });
-      await loadData();
-    } catch (e) {
-      setError(e.message);
-    }
-  };
-
-  const deleteActivity = async (id) => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/${rollNumber}/activities/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Unable to delete activity.");
-      await loadData();
-    } catch (e) {
-      setError(e.message);
-    }
-  };
-
-  const markCompleted = async (activity) => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/${rollNumber}/activities/${activity.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: activity.title,
-          description: activity.description,
-          status: "Completed",
-          date: activity.date
-        })
-      });
-      if (!response.ok) throw new Error("Unable to update activity.");
-      await loadData();
-    } catch (e) {
-      setError(e.message);
-    }
-  };
+    changeActivity("POST", null, form);
+  }
 
   return (
     <section className="panel">
       <h2>Home Page</h2>
-      {error && <p className="error">{error}</p>}
+      <LoadStatus resource={studentResource} label="student details" />
+      {error && <p className="error" role="alert">{error}</p>}
 
       {student && (
         <div className="card-grid">
@@ -108,22 +76,24 @@ function Home({ portalData }) {
               <option value="Completed">Completed</option>
             </select>
             <input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} required />
-            <button type="submit">Add Activity</button>
+            <button disabled={saving} type="submit">Add Activity</button>
           </form>
         </article>
 
         <article className="card">
           <h3>Activities</h3>
+          <LoadStatus resource={activities} label="activities" />
+          {!activities.loading && !activities.error && activities.data?.length === 0 && <p>No activities yet.</p>}
           <ul>
-            {activities.map((activity) => (
+            {activities.data?.map((activity) => (
               <li key={activity.id} className="activity-item">
                 <div>
                   <strong>{activity.title}</strong> ({activity.status}) - {activity.date}
                   <p>{activity.description}</p>
                 </div>
-                <button className="danger" type="button" onClick={() => deleteActivity(activity.id)}>Delete</button>
+                <button className="danger" type="button" disabled={saving} onClick={() => changeActivity("DELETE", activity.id)}>Delete</button>
                 {activity.status !== "Completed" && (
-                  <button type="button" onClick={() => markCompleted(activity)}>Mark Completed</button>
+                  <button type="button" disabled={saving} onClick={() => changeActivity("PUT", activity.id, { ...activity, status: "Completed" })}>Mark Completed</button>
                 )}
               </li>
             ))}

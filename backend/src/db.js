@@ -6,6 +6,10 @@ const pool = mysql.createPool({
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
+  ssl: process.env.MYSQL_SSL_CA
+    ? { ca: process.env.MYSQL_SSL_CA.replace(/\\n/g, "\n"), rejectUnauthorized: true, verifyIdentity: true }
+    : undefined,
+  dateStrings: ["DATE"],
   waitForConnections: true,
   connectionLimit: 10,
 });

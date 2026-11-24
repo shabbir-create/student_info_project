@@ -1,31 +1,13 @@
-import { useEffect, useState } from "react";
+import LoadStatus from "../LoadStatus";
 
 function Student({ portalData }) {
-  const { student, setStudent, rollNumber, setError } = portalData;
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchStudent = async () => {
-      if (student) return;
-      setLoading(true);
-      try {
-        const response = await fetch(`/api/${rollNumber}/student`);
-        if (!response.ok) throw new Error("Unable to load student details.");
-        setStudent(await response.json());
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStudent();
-  }, [student, setStudent, rollNumber, setError]);
+  const { studentResource } = portalData;
+  const student = studentResource.data;
 
   return (
     <section className="panel">
       <h2>Student Page</h2>
-      {!student && !loading && <p>Student data is currently unavailable.</p>}
-      {loading && <p>Loading student details...</p>}
+      <LoadStatus resource={studentResource} label="student details" />
       {student && (
         <div className="card-grid">
           <article className="card">

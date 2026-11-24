@@ -8,7 +8,7 @@ const studentsTable = `students_${roll}`;
 const activitiesTable = `activities_${roll}`;
 const subjectsTable = `Subject_${roll}`;
 
-router.get(`/${roll}/student`, async (_req, res) => {
+router.get(`/${roll}/student`, async (_req, res, next) => {
   try {
     const [studentRows] = await pool.query(
       `SELECT id, name, roll_number, course, email, city, school, year_of_passing, tenth_percentage FROM ${studentsTable} LIMIT 1`
@@ -24,22 +24,22 @@ router.get(`/${roll}/student`, async (_req, res) => {
 
     return res.json({ ...studentRows[0], subjects: subjectRows });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to fetch student data.", error: error.message });
+    return next(error);
   }
 });
 
-router.get(`/${roll}/activities`, async (_req, res) => {
+router.get(`/${roll}/activities`, async (_req, res, next) => {
   try {
     const [rows] = await pool.query(
       `SELECT id, title, description, status, date FROM ${activitiesTable} ORDER BY date DESC, id DESC`
     );
     return res.json(rows);
   } catch (error) {
-    return res.status(500).json({ message: "Failed to fetch activities.", error: error.message });
+    return next(error);
   }
 });
 
-router.post(`/${roll}/activities`, async (req, res) => {
+router.post(`/${roll}/activities`, async (req, res, next) => {
   try {
     const { title, description, status, date } = req.body;
     if (!title || !description || !status || !date) {
@@ -53,11 +53,11 @@ router.post(`/${roll}/activities`, async (req, res) => {
 
     return res.status(201).json({ message: "Activity created.", id: result.insertId });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to create activity.", error: error.message });
+    return next(error);
   }
 });
 
-router.put(`/${roll}/activities/:id`, async (req, res) => {
+router.put(`/${roll}/activities/:id`, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     const { title, description, status, date } = req.body;
@@ -76,11 +76,11 @@ router.put(`/${roll}/activities/:id`, async (req, res) => {
 
     return res.json({ message: "Activity updated." });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to update activity.", error: error.message });
+    return next(error);
   }
 });
 
-router.delete(`/${roll}/activities/:id`, async (req, res) => {
+router.delete(`/${roll}/activities/:id`, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     const [result] = await pool.query(`DELETE FROM ${activitiesTable} WHERE id = ?`, [id]);
@@ -91,8 +91,17 @@ router.delete(`/${roll}/activities/:id`, async (req, res) => {
 
     return res.json({ message: "Activity deleted." });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to delete activity.", error: error.message });
+    return next(error);
   }
+});
+
+router.use((error, _req, res, _next) => {
+  console.error("Portal database request failed", error.code || error.name);
+  const unavailable = ["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ETIMEDOUT", "PROTOCOL_CONNECTION_LOST"];
+  if (unavailable.includes(error.code)) {
+    return res.status(503).json({ message: "The student database is unavailable. Please try again shortly." });
+  }
+  return res.status(500).json({ message: "The portal could not complete the database request." });
 });
 
 module.exports = router;

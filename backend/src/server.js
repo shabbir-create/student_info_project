@@ -29,6 +29,6 @@ if (fs.existsSync(frontendDist)) {
   });
 }
 
-app.listen(port, "0.0.0.0",() => {
+app.listen(port, process.env.HOST || "0.0.0.0", () => {
   console.log(`Student Portal server running at http://localhost:${port}`);
 });

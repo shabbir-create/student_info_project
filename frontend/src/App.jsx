@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { usePortalData } from "./usePortalData";
 import Home from "./pages/Home";
 import Student from "./pages/Student";
 import About from "./pages/About";
@@ -13,23 +14,8 @@ const VALID_PASSWORD = "Secure@1234";
 function App() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [student, setStudent] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [error, setError] = useState("");
-
-  const portalData = useMemo(
-    () => ({
-      rollNumber: ROLL_NUMBER,
-      studentName: STUDENT_NAME,
-      student,
-      activities,
-      setStudent,
-      setActivities,
-      error,
-      setError
-    }),
-    [student, activities, error]
-  );
+  const studentResource = usePortalData(isLoggedIn ? `${ROLL_NUMBER}/student` : null);
+  const portalData = { rollNumber: ROLL_NUMBER, studentName: STUDENT_NAME, studentResource };
 
   const handleLogin = ({ username, password }) => {
     const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
