@@ -1,33 +1,41 @@
 import LoadStatus from "../LoadStatus";
 
-function Student({ portalData }) {
-  const { studentResource } = portalData;
-  const student = studentResource.data;
-
+export default function Student({ portalData: { studentResource } }) {
+  const s = studentResource.data;
   return (
     <section className="panel">
-      <h2>Student Page</h2>
+      <header className="page-heading">
+        <p className="eyebrow">Student record</p>
+        <h1>Profile</h1>
+      </header>
       <LoadStatus resource={studentResource} label="student details" />
-      {student && (
-        <div className="card-grid">
-          <article className="card">
-            <h3>Academic Profile</h3>
-            <p>10th Percentage: {student.tenth_percentage}%</p>
-            <p>City: {student.city}</p>
-            <p>School: {student.school}</p>
-            <p>Year of Passing: {student.year_of_passing}</p>
+      {s && (
+        <div className="profile-grid">
+          <article className="profile-cover">
+            <span className="monogram">{s.name[0]}</span>
+            <h2>{s.name}</h2>
+            <p>{s.course}</p>
+            <small>Roll {s.roll_number}</small>
           </article>
-
           <article className="card">
-            <h3>Extended Details</h3>
-            <p>Course: {student.course}</p>
-            <p>Email: {student.email}</p>
-            <p>Roll Number: {student.roll_number}</p>
+            <h2>Academic profile</h2>
+            <dl className="facts">
+              {[
+                ["School", s.school],
+                ["City", s.city],
+                ["Year of passing", s.year_of_passing],
+                ["10th percentage", s.tenth_percentage + "%"],
+                ["Email", s.email],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
           </article>
         </div>
       )}
     </section>
   );
 }
-
-export default Student;

@@ -1,24 +1,19 @@
-# Student Information Portal (Roll No: 1234)
+# Student Information Portal
 
-Full-stack assignment project using React SPA + Express API + MySQL.
+React, Express and SQL power a shared student demo for roll 1234. Open [the portal](https://student-info-project.vercel.app/) and choose **Open demo workspace**, or enter roll `1234` and password `Secure@1234`. The demo gate is for navigation. The shared API is public.
 
 ## Run locally
 
-1. Copy `backend/.env.example` to `backend/.env` and enter your MySQL connection details.
-2. For a new database, import `sql/schema_1234.sql` once. It creates and selects `student_portal_1234` and adds the sample records. For an existing populated database, use its name in `MYSQLDATABASE`.
-3. From the repository root, run `npm run install:all`, then `npm run start:prod`.
-4. Open `http://localhost:4000`. During frontend development, start the backend and run `npm run dev --prefix frontend` in a second terminal. Vite proxies `/api` to the local backend on port 4000.
+Use Node 22.13+ or Node 24. From the repository root run `npm run install:all`, then `npm run start:prod`. Open `http://localhost:4000`. SQLite initializes the supplied sample profile, subjects and activities once. It stores changes in `backend/data/portal.sqlite`. For frontend development, run `npm start` and `npm run dev --prefix frontend` in separate terminals.
 
-## Deploy the existing portal
+## Deployment
 
-1. In Aiven, open the MySQL service overview. Confirm the service is running and copy its current connection information. If the service was powered off, use **Actions → Power on** and wait until it is running. If the service has been replaced, restore the existing data from backup or initialize a fresh assignment database with the supplied schema.
-2. In Render, use the `backend` root directory, `npm ci` build command, and `npm start` start command. Set `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, and `MYSQLDATABASE` in the service environment. Set `MYSQL_SSL_CA` to the Aiven project CA certificate in PEM format. Redeploy.
-3. Open `https://student-info-project.onrender.com/api/1234/student` and `https://student-info-project.onrender.com/api/1234/activities`. Both should return HTTP 200 and JSON. The separate `/health` route checks only that Express is running.
-4. In Vercel, use the `frontend` root directory, Vite preset, `npm ci` install command, `npm run build` build command, and `dist` output directory. Deploy the updated source. The rules in `frontend/vercel.json` forward API calls to Render and serve the app for direct page visits. If Vercel uses the repository root, the top-level `vercel.json` provides the equivalent build and routing settings. If the Render URL changes, update both configurations.
-5. Open `https://student-info-project.vercel.app/student`, sign in, and confirm that the student profile loads. Check that `/academic` shows subjects and the Home page lists activities.
+Vercel builds the frontend and forwards `/api/*` to the Express service on Render. The Vercel configuration supports both the repository root and the frontend directory as the project root. Render can run from the backend directory with `npm ci` and `npm start`.
 
-If Render logs `ENOTFOUND`, compare `MYSQLHOST` with Aiven’s current **Host** value. Use the hostname alone and put the port in `MYSQLPORT`. If requests report a missing table, check that `MYSQLDATABASE` points to the database containing the assignment tables.
+On Render the default database is SQLite. With the default ephemeral filesystem, records survive a page refresh but can reset when the service restarts or redeploys. Use **Export** in the planner to download all current activities. For durable SQLite storage, mount a persistent disk and set `SQLITE_PATH` to a database file on that disk. Moving to a new file initializes a fresh sample dataset unless an existing SQLite backup is restored there.
 
-## Login
-- Username: `1234`
-- Password: `Secure@1234`
+## MySQL
+
+Set `PORTAL_DB=mysql` to use a durable MySQL database. Copy `backend/.env.example` to `backend/.env` locally, or set its MySQL values in the host environment. For Aiven, supply the project CA in `MYSQL_SSL_CA`. Point `MYSQLDATABASE` at your existing populated database or import `sql/schema_1234.sql` once into a new database. Switching drivers selects a different database. Records are not synchronized between SQLite and MySQL.
+
+The service checks for SQLite schema initialization within a transaction. A temporary MySQL outage returns an error until connectivity recovers. Check `/api/1234/student` and `/api/1234/activities` for live data, and `/health` for process availability.

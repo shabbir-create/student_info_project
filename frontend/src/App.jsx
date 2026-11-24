@@ -1,69 +1,87 @@
 import { useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { usePortalData } from "./usePortalData";
 import Home from "./pages/Home";
 import Student from "./pages/Student";
-import About from "./pages/About";
 import Academic from "./pages/Academic";
+import About from "./pages/About";
 import Login from "./pages/Login";
 
-const ROLL_NUMBER = "1234";
-const STUDENT_NAME = "Shabbir khan";
-const VALID_PASSWORD = "Secure@1234";
+const rollNumber = "1234";
+const sessionKey = "portal.demo.signed-in";
 
-function App() {
-  const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const studentResource = usePortalData(isLoggedIn ? `${ROLL_NUMBER}/student` : null);
-  const portalData = { rollNumber: ROLL_NUMBER, studentName: STUDENT_NAME, studentResource };
-
-  const handleLogin = ({ username, password }) => {
-    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
-    if (username !== ROLL_NUMBER) {
-      return { ok: false, message: "Username must be your roll number." };
-    }
-    if (!strongPassword.test(password)) {
-      return {
-        ok: false,
-        message: "Password must include uppercase, lowercase, number, special character and 8+ length."
-      };
-    }
-    if (password !== VALID_PASSWORD) {
-      return { ok: false, message: "Invalid credentials." };
-    }
-    setIsLoggedIn(true);
-    return { ok: true };
+function Workspace({ onLogout }) {
+  const studentResource = usePortalData(`${rollNumber}/student`);
+  const portalData = {
+    rollNumber,
+    studentName: "Shabbir Khan",
+    studentResource,
   };
-
-  if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} rollNumber={ROLL_NUMBER} />;
-  }
-
   return (
     <div className="app-shell">
       <header className="navbar">
-        <h1>Student Information Portal</h1>
-        <nav>
-          <Link className={location.pathname === "/" ? "active-link" : ""} to="/">Home</Link>
-          <Link className={location.pathname === "/about" ? "active-link" : ""} to="/about">About</Link>
-          <Link className={location.pathname === "/academic" ? "active-link" : ""} to="/academic">Academic</Link>
-          <Link className={location.pathname === "/student" ? "active-link" : ""} to="/student">Student</Link>
+        <NavLink to="/" className="brand" aria-label="Student Portal home">
+          <span className="brand-mark" aria-hidden="true">
+            S
+          </span>{" "}
+          Student Portal
+        </NavLink>
+        <nav aria-label="Main navigation">
+          {[
+            ["/", "Overview"],
+            ["/academic", "Subjects"],
+            ["/student", "Profile"],
+            ["/about", "About"],
+          ].map(([path, label]) => (
+            <NavLink end key={path} to={path}>
+              {label}
+            </NavLink>
+          ))}
         </nav>
+        <button className="quiet signout" onClick={onLogout}>
+          Sign out
+        </button>
       </header>
-
       <main className="content">
         <Routes>
           <Route path="/" element={<Home portalData={portalData} />} />
+          <Route
+            path="/academic"
+            element={<Academic portalData={portalData} />}
+          />
+          <Route
+            path="/student"
+            element={<Student portalData={portalData} />}
+          />
           <Route path="/about" element={<About portalData={portalData} />} />
-          <Route path="/academic" element={<Academic portalData={portalData} />} />
-          <Route path="/student" element={<Student portalData={portalData} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-
-      <footer className="footer">Roll No: {ROLL_NUMBER} | Student: {STUDENT_NAME}</footer>
+      <footer className="footer">
+        Student Portal{" "}
+        <span>
+          Roll {rollNumber} · {portalData.studentName}
+        </span>
+      </footer>
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  const [signedIn, setSignedIn] = useState(
+    () => sessionStorage.getItem(sessionKey) === "yes",
+  );
+  function enter() {
+    sessionStorage.setItem(sessionKey, "yes");
+    setSignedIn(true);
+  }
+  function leave() {
+    sessionStorage.removeItem(sessionKey);
+    setSignedIn(false);
+  }
+  return signedIn ? (
+    <Workspace onLogout={leave} />
+  ) : (
+    <Login onEnter={enter} rollNumber={rollNumber} />
+  );
+}

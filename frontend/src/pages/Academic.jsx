@@ -1,28 +1,50 @@
+import { useState } from "react";
 import LoadStatus from "../LoadStatus";
 
-function Academic({ portalData }) {
-  const { studentResource } = portalData;
-  const student = studentResource.data;
-
+export default function Academic({ portalData: { studentResource } }) {
+  const [query, setQuery] = useState("");
+  const subjects = studentResource.data?.subjects || [];
+  const visible = subjects.filter((s) =>
+    (s.subject_name + " " + s.description)
+      .toLowerCase()
+      .includes(query.trim().toLowerCase()),
+  );
   return (
     <section className="panel">
-      <h2>Academic Page</h2>
-      <LoadStatus resource={studentResource} label="student details" />
-
-      {student && (
-        <article className="card">
-          <h3>All Subjects ({student.subjects?.length || 0})</h3>
-          <ul>
-            {student.subjects?.map((subject) => (
-              <li key={subject.id}>
-                <strong>{subject.subject_name}</strong> - {subject.description}
-              </li>
+      <header className="page-heading">
+        <p className="eyebrow">Academic record</p>
+        <h1>Subjects</h1>
+      </header>
+      <LoadStatus resource={studentResource} label="subjects" />
+      {studentResource.data && (
+        <>
+          <div className="toolbar">
+            <label className="search">
+              Search subjects
+              <input
+                type="search"
+                placeholder="Subject or topic"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </label>
+            <p>
+              {visible.length} of {subjects.length} subjects
+            </p>
+          </div>
+          <div className="subject-grid">
+            {visible.map((s) => (
+              <article key={s.id} className="subject-card">
+                <small>Course {s.course_id}</small>
+                <h2>{s.subject_name}</h2>
+                <p>{s.description}</p>
+                <time>{s.date}</time>
+              </article>
             ))}
-          </ul>
-        </article>
+          </div>
+          {!visible.length && <p>No subjects match your search.</p>}
+        </>
       )}
     </section>
   );
 }
-
-export default Academic;

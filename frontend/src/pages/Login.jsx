@@ -1,34 +1,96 @@
 import { useState } from "react";
 
-function Login({ onLogin, rollNumber }) {
+export default function Login({ onEnter, rollNumber }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState("");
-
-  const handleSubmit = (event) => {
+  function submit(event) {
     event.preventDefault();
-    const result = onLogin({ username, password });
-    setMessage(result.ok ? "Login successful." : result.message);
-  };
-
+    if (username.trim() === rollNumber && password === "Secure@1234") onEnter();
+    else
+      setMessage(
+        "Check your roll number and password, or open the demo below.",
+      );
+  }
   return (
-    <div className="login-wrapper">
-      <form className="login-card" onSubmit={handleSubmit}>
-        <h2>Login Required</h2>
-        <p>Use roll number as username. Demo roll number: {rollNumber}</p>
-        <p>Demo password: Secure@1234</p>
-
-        <label htmlFor="username">Username (Roll No)</label>
-        <input id="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="1234" required />
-
-        <label htmlFor="password">Password</label>
-        <input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Strong password" required />
-
-        <button type="submit">Sign In</button>
-        <p className="status-text">{message}</p>
-      </form>
-    </div>
+    <main className="login-page">
+      <header className="login-brand brand">
+        <span className="brand-mark" aria-hidden="true">
+          S
+        </span>{" "}
+        Student Portal
+      </header>
+      <div className="login-spread">
+        <section className="cover">
+          <p className="eyebrow">B.Tech · Computer Science</p>
+          <h1>
+            Student
+            <br />
+            <em>notebook.</em>
+          </h1>
+          <div className="book-stack" aria-hidden="true">
+            <div>Data Structures</div>
+            <div>Frontend Engineering</div>
+            <div>Database Management</div>
+          </div>
+          <p className="cover-footer">
+            Academic workspace <span>Roll {rollNumber}</span>
+          </p>
+        </section>
+        <section className="login-card">
+          <h2>Sign in</h2>
+          <form className="form-stack" onSubmit={submit}>
+            <label>
+              Roll number
+              <input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                required
+              />
+            </label>
+            <label htmlFor="password">Password</label>
+            <div className="password">
+              <input
+                id="password"
+                aria-label="Password"
+                type={visible ? "text" : "password"}
+                value={password}
+                autoComplete="current-password"
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                className="quiet"
+                type="button"
+                aria-label={visible ? "Hide password" : "Show password"}
+                onClick={() => setVisible(!visible)}
+              >
+                {visible ? "Hide" : "Show"}
+              </button>
+            </div>
+            {message && (
+              <p className="error" role="alert">
+                {message}
+              </p>
+            )}
+            <button type="submit">
+              Sign in <span aria-hidden="true">→</span>
+            </button>
+          </form>
+          <div className="demo-box">
+            <strong>Explore the shared demo</strong>
+            <p>
+              Roll {rollNumber} · Password <code>Secure@1234</code>
+            </p>
+            <button className="secondary" onClick={onEnter}>
+              Open demo workspace
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
-
-export default Login;
