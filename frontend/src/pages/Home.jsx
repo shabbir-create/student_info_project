@@ -46,7 +46,7 @@ export default function Home({ portalData: { rollNumber, studentResource } }) {
     try {
       await requestPortal(id == null ? path : `${path}/${id}`, {
         method,
-        headers: payload && { "Content-Type": "application/json" },
+        headers: payload ? { "Content-Type": "application/json" } : undefined,
         body: payload && JSON.stringify(payload),
       });
       setForm(null);
@@ -118,7 +118,10 @@ export default function Home({ portalData: { rollNumber, studentResource } }) {
             <button
               disabled={busy}
               onClick={() => {
-                setForm({ ...emptyForm });
+                const today = new Date();
+                const localDate = [today.getFullYear(), today.getMonth() + 1, today.getDate()]
+                  .map(value => String(value).padStart(2, "0")).join("-");
+                setForm({ ...emptyForm, date: localDate });
                 setDeleting(null);
                 setError("");
                 setNotice("");
